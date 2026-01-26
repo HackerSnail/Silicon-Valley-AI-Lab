@@ -1,1 +1,5 @@
-spring.application.name=exam-system-server-new
+spring:
+  application:
+    name: exam-system-server-new
+server:
+  port: 8080
