@@ -6,7 +6,7 @@ target/
 **/mvnw
 **/mvnw.cmd
 **/.mvn/wrapper/maven-wrapper.jar
-
+applications.yml
 
 ### STS ###
 .apt_generated
