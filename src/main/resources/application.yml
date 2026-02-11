@@ -3,7 +3,7 @@ server:
 spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:mysql://192.168.25.59:3306/exam_system_server_new?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=GMT%2b8
+    url: jdbc:mysql://192.168.25.50:3306/exam_system_server_new?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=GMT%2b8
     username: root
     password: root
     hikari:
@@ -16,6 +16,12 @@ spring:
       pool-name: SPHHikariPool
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
+  # Tomcat Multipart文件上传限制（关键配置！）
+  servlet:
+    multipart:
+      max-file-size: 5MB  # 单个文件的最大大小
+      max-request-size: 10MB  # 整个请求的最大大小（包含所有文件）
+      enabled: true  # 确保启用文件上传
 
 
 mybatis-plus:
@@ -27,3 +33,16 @@ mybatis-plus:
       logic-delete-value: 1 # 逻辑已删除值(默认为 1)
       logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
 
+
+minio:
+  endpoint: http://192.168.25.50:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket-name: exam-system-server-new
+
+# 轮播图上传配置
+banner:
+  upload:
+    max-size: 5242880  # 5MB，单位：字节
+    allowed-types: image/jpeg,image/jpg,image/png,image/gif,image/webp  # 允许的图片类型
+    dangerous-types: image/svg+xml,image/x-icon  # 危险的图片类型（需要过滤）

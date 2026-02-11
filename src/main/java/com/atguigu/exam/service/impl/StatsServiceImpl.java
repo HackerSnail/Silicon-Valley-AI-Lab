@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -37,6 +38,7 @@ public class StatsServiceImpl implements StatsService {
     private PaperMapper paperMapper;  // 试卷Mapper
 
     @Override
+    @Transactional(readOnly = true)  // 添加只读事务，解决SqlSession同步警告
     public StatsVo getSystemStats() {
         StatsVo stats = new StatsVo();
         

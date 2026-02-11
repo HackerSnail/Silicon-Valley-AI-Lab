@@ -105,7 +105,11 @@
             <version>4.4.0</version>
         </dependency>
 
-
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>8.5.7</version>
+        </dependency>
         <!-- Redis 缓存依赖  redis的依赖后续导入-->
         <!--        <dependency>-->
         <!--            <groupId>org.springframework.boot</groupId>-->
