@@ -3,10 +3,14 @@ package com.atguigu.exam.controller;
 import com.atguigu.exam.common.Result;
 import com.atguigu.exam.entity.Notice;
 import com.atguigu.exam.service.NoticeService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,6 +19,7 @@ import java.util.List;
  * 公告控制器 - 处理系统公告管理相关的HTTP请求
  * 包括公告的增删改查、状态管理、前台展示等功能
  */
+@Slf4j
 @RestController  // REST控制器，返回JSON数据
 @RequestMapping("/api/notices")  // 公告API路径前缀
 @CrossOrigin  // 允许跨域访问
@@ -24,17 +29,26 @@ public class NoticeController {
     /**
      * 注入公告业务服务
      */
-    @Autowired
-    private NoticeService noticeService;
-    
+    private final NoticeService noticeService;
+
+    public NoticeController(NoticeService noticeService) {
+        this.noticeService = noticeService;
+    }
+
     /**
      * 获取启用的公告（前台首页使用）
      * @return 公告列表
      */
     @GetMapping("/active")  // 处理GET请求
     @Operation(summary = "获取启用的公告", description = "获取状态为启用的公告列表，供前台首页展示使用")  // API描述
+    @Transactional(readOnly = true)
     public Result<List<Notice>> getActiveNotices() {
-        return noticeService.getActiveNotices();
+        LambdaQueryWrapper<Notice> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Notice::getIsActive, true)  // 仅查询启用的公告
+                .orderByDesc(Notice::getPriority);  // 按优先级降序排序
+        List<Notice> noticeList = noticeService.list(queryWrapper);
+        log.info("查询所有前台需要的公告信息业务执行成功！结果为：{}，共获取{}条记录", noticeList, noticeList.size());
+        return Result.success(noticeList, "查询所有前台需要的公告信息成功！");
     }
     
     /**
@@ -42,11 +56,14 @@ public class NoticeController {
      * @param limit 限制数量，默认5条
      * @return 公告列表
      */
+    @Transactional(readOnly = true)
     @GetMapping("/latest")  // 处理GET请求
     @Operation(summary = "获取最新公告", description = "获取最新发布的公告列表，用于首页推荐展示")  // API描述
     public Result<List<Notice>> getLatestNotices(
             @Parameter(description = "限制数量", example = "5") @RequestParam(defaultValue = "5") int limit) {
-        return noticeService.getLatestNotices(limit);
+        Result<List<Notice>> latestNotices = noticeService.getLatestNotices(limit);
+        log.info("查询最新{}条公告信息业务执行成功！", limit);
+        return Result.success(latestNotices.getData(), "查询最新" + limit + "条公告信息成功！");
     }
     
     /**
