@@ -13,7 +13,8 @@ spring:
       max-lifetime: 540000
       maximum-pool-size: 12
       minimum-idle: 10
-      pool-name: SPHHikariPool  jackson:
+      pool-name: SPHHikariPool
+  jackson:
     date-format: yyyy-MM-dd HH:mm:ss
   # Tomcat Multipart文件上传限制（关键配置！）
   servlet:
