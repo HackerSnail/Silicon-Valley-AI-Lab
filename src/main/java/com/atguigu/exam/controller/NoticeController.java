@@ -70,6 +70,7 @@ public class NoticeController {
      * 获取所有公告（管理后台使用）
      * @return 公告列表
      */
+    @Transactional(readOnly = true)
     @GetMapping("/list")  // 处理GET请求
     @Operation(summary = "获取所有公告", description = "获取所有公告列表，包括启用和禁用的，供管理后台使用")  // API描述
     public Result<List<Notice>> getAllNotices() {
@@ -98,10 +99,14 @@ public class NoticeController {
      * @param notice 公告对象
      * @return 操作结果
      */
+    @Transactional
     @PostMapping("/add")  // 处理POST请求
     @Operation(summary = "发布新公告", description = "创建并发布新的系统公告")  // API描述
     public Result<String> addNotice(@RequestBody Notice notice) {
-        return noticeService.addNotice(notice);
+        log.info("添加公告业务执行开始！添加内容为：{}", notice);
+        Result<String> result = noticeService.addNotice(notice);
+        log.info("添加公告业务执行成功！添加结果为：{}", result);
+        return result;
     }
     
     /**
@@ -109,10 +114,14 @@ public class NoticeController {
      * @param notice 公告对象
      * @return 操作结果
      */
+    @Transactional
     @PutMapping("/update")  // 处理PUT请求
     @Operation(summary = "更新公告信息", description = "修改公告的内容、标题、类型等信息")  // API描述
     public Result<String> updateNotice(@RequestBody Notice notice) {
-        return noticeService.updateNotice(notice);
+        log.info("更新公告信息业务执行开始！更新内容为：{}", notice);
+        Result<String> result = noticeService.updateNotice(notice);
+        log.info("更新公告信息业务执行成功！更新结果为：{}", result);
+        return result;
     }
     
     /**
@@ -120,11 +129,15 @@ public class NoticeController {
      * @param id 公告ID
      * @return 操作结果
      */
+    @Transactional
     @DeleteMapping("/delete/{id}")  // 处理DELETE请求
     @Operation(summary = "删除公告", description = "根据ID删除指定的公告")  // API描述
     public Result<String> deleteNotice(
             @Parameter(description = "公告ID") @PathVariable Long id) {
-        return noticeService.deleteNotice(id);
+        log.info("删除公告业务执行开始！删除ID为：{}", id);
+        Result<String> result = noticeService.deleteNotice(id);
+        log.info("删除公告业务执行成功！删除结果为：{}", result);
+        return result;
     }
     
     /**
@@ -133,11 +146,15 @@ public class NoticeController {
      * @param isActive 是否启用
      * @return 操作结果
      */
+    @Transactional
     @PutMapping("/toggle/{id}")  // 处理PUT请求
     @Operation(summary = "切换公告状态", description = "启用或禁用指定的公告，禁用后不会在前台显示")  // API描述
     public Result<String> toggleNoticeStatus(
             @Parameter(description = "公告ID") @PathVariable Long id, 
             @Parameter(description = "是否启用，true为启用，false为禁用") @RequestParam Boolean isActive) {
-        return noticeService.toggleNoticeStatus(id, isActive);
+        log.info("切换公告状态业务执行开始！切换ID为：{}，是否启用：{}", id, isActive);
+        Result<String> result = noticeService.toggleNoticeStatus(id, isActive);
+        log.info("切换公告状态业务执行成功！切换结果为：{}", result);
+        return result;
     }
 } 
