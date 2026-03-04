@@ -36,8 +36,8 @@ mybatis-plus:
 
 minio:
   endpoint: http://192.168.25.50:9000
-  access-key: minioadmin
-  secret-key: minioadmin
+  access-key: root
+  secret-key: Minio@123456
   bucket-name: exam-system-server-new
 
 # 轮播图上传配置
