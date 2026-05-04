@@ -2,6 +2,8 @@ package com.atguigu.exam.controller;
 
 import com.atguigu.exam.common.Result;
 import com.atguigu.exam.entity.Question;
+import com.atguigu.exam.service.QuestionService;
+import com.atguigu.exam.vo.QuestionQueryVo;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,6 +16,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 题目控制器 - 处理题目相关的HTTP请求
@@ -35,12 +38,16 @@ import java.util.stream.Collectors;
  * @author 智能学习平台开发团队
  * @version 1.0
  */
+@Slf4j
 @RestController  // @Controller + @ResponseBody，表示这是一个REST控制器，返回JSON数据
 @RequestMapping("/api/questions")  // 设置基础URL路径，所有方法的URL都以此开头
 @CrossOrigin(origins = "*")  // 允许跨域访问，解决前后端分离开发中的跨域问题
 @Tag(name = "题目管理", description = "题目相关的增删改查操作，包括分页查询、随机获取、热门推荐等功能")  // Swagger标签，用于分组显示API
 public class QuestionController {
-    
+    private final QuestionService questionService;
+    public QuestionController(QuestionService questionService) {
+        this.questionService = questionService;
+    }
     /**
      * 分页查询题目列表（支持多条件筛选）
      * 
@@ -66,16 +73,17 @@ public class QuestionController {
     @GetMapping("/list")  // 映射GET请求到/api/questions/list
     @Operation(summary = "分页查询题目列表", description = "支持按分类、难度、题型、关键词进行多条件筛选的分页查询")  // Swagger接口描述
     public Result<Page<Question>> getQuestionList(
-            @Parameter(description = "当前页码，从1开始", example = "1") @RequestParam(defaultValue = "1") Integer page,  // 参数描述
-            @Parameter(description = "每页显示数量", example = "10") @RequestParam(defaultValue = "10") Integer size,
-            @Parameter(description = "分类ID筛选条件") @RequestParam(required = false) Long categoryId,
-            @Parameter(description = "难度筛选条件，可选值：EASY/MEDIUM/HARD") @RequestParam(required = false) String difficulty,
-            @Parameter(description = "题型筛选条件，可选值：CHOICE/JUDGE/TEXT") @RequestParam(required = false) String type,
-            @Parameter(description = "关键词搜索，对题目标题进行模糊查询") @RequestParam(required = false) String keyword) {
-        // 返回统一格式的成功响应
-        return Result.success(null);
+        @Parameter(description = "当前页码，从1开始", example = "1") @RequestParam(defaultValue = "1") Integer page,  // 参数描述
+        @Parameter(description = "每页显示数量", example = "10") @RequestParam(defaultValue = "10") Integer size,
+        QuestionQueryVo questionQueryVo) {
+            // 返回统一格式的成功响应
+        Page<Question> pageBean = new Page<>(page, size);
+        questionService.customPageService(pageBean,questionQueryVo);
+        //questionService.customPageJavaService(pageBean,questionPageVo);
+        log.info("分页查询数据成功！total为：{},数据为：{}" ,pageBean.getTotal(),pageBean.getRecords());
+        return Result.success(pageBean);
     }
-    
+        
     /**
      * 根据ID查询单个题目详情
      * 
@@ -91,8 +99,9 @@ public class QuestionController {
     @Operation(summary = "根据ID查询题目详情", description = "获取指定ID的题目完整信息，包括题目内容、选项、答案等详细数据")  // API描述
     public Result<Question> getQuestionById(
             @Parameter(description = "题目ID", example = "1") @PathVariable Long id) {
-
-        return Result.success(null);
+            Question question =  questionService.customDetailQuestion(id);
+            log.info("查询题目详情调用成功！ 返回数据为：{}",question);
+            return Result.success(question);
     }
     
     /**
@@ -114,7 +123,9 @@ public class QuestionController {
     @Operation(summary = "创建新题目", description = "添加新的考试题目，支持选择题、判断题、简答题等多种题型")  // API描述
     public Result<Question> createQuestion(@RequestBody Question question) {
 
-        return Result.success(null);
+        questionService.customSaveQuestion(question);
+        log.info("保存题目信息接口调用成功！最终结果为：{}",question);
+        return Result.success(question);
     }
     
     /**
@@ -134,7 +145,9 @@ public class QuestionController {
     public Result<Question> updateQuestion(
             @Parameter(description = "题目ID") @PathVariable Long id, 
             @RequestBody Question question) {
-        return Result.success(null);
+        questionService.customUpdateQuestion(question);
+        log.info("修改题目信息成功！！");
+        return Result.success(question);
     }
     
     /**
@@ -155,11 +168,14 @@ public class QuestionController {
     @Operation(summary = "删除题目", description = "根据ID删除指定的题目，包括关联的选项和答案数据")  // API描述
     public Result<String> deleteQuestion(
             @Parameter(description = "题目ID") @PathVariable Long id) {
-        // 根据操作结果返回不同的响应
-        if (true) {
+
+        try {
+            questionService.customRemoveQuestionById(id);
+            log.info("删除指定id:{} 题目信息成功！！", id);
             return Result.success("题目删除成功");
-        } else {
-            return Result.error("题目删除失败");
+        } catch (Exception e) {
+            log.error("删除指定id:{} 题目信息失败：{}", id, e.getMessage());
+            return Result.error(e.getMessage());
         }
     }
     
@@ -175,8 +191,9 @@ public class QuestionController {
     @Operation(summary = "按分类查询题目", description = "获取指定分类下的所有题目列表")  // API描述
     public Result<List<Question>> getQuestionsByCategory(
             @Parameter(description = "分类ID") @PathVariable Long categoryId) {
-
-        return Result.success(null);
+        List<Question> questionList = questionService.customDetailQuestionList(categoryId);
+        log.info("查询分类{}下的所有题目成功！！", categoryId);
+        return Result.success(questionList);
     }
     
     /**
@@ -191,7 +208,9 @@ public class QuestionController {
     @Operation(summary = "按难度查询题目", description = "获取指定难度等级的题目列表")  // API描述
     public Result<List<Question>> getQuestionsByDifficulty(
             @Parameter(description = "难度等级，可选值：EASY(简单)/MEDIUM(中等)/HARD(困难)") @PathVariable String difficulty) {
-        return Result.success(null);
+        List<Question> questions = questionService.customGetQuestionsByDifficulty(difficulty);
+        log.info("查询难度{}的题目成功！！", difficulty);
+        return Result.success(questions);
     }
     
     /**
@@ -218,8 +237,11 @@ public class QuestionController {
             @Parameter(description = "需要获取的题目数量", example = "10") @RequestParam(defaultValue = "10") Integer count,
             @Parameter(description = "分类ID限制条件，可选") @RequestParam(required = false) Long categoryId,
             @Parameter(description = "难度限制条件，可选值：EASY/MEDIUM/HARD") @RequestParam(required = false) String difficulty) {
+            List<Question> questions = questionService.customGetRandomQuestions(count, categoryId, difficulty);
+            log.info("随机获取{}条题目成功！！", count);
+            return Result.success(questions);
 
-        return Result.success(null);
+    
     }
 
     /**
@@ -256,9 +278,11 @@ public class QuestionController {
     @Operation(summary = "获取热门题目", description = "获取访问次数最多的热门题目，用于首页推荐展示")  // API描述
     public Result<List<Question>> getPopularQuestions(
             @Parameter(description = "返回题目数量", example = "10") @RequestParam(defaultValue = "10") Integer size) {
-
+            
+        List<Question> questionList =  questionService.customFindPopularQuestions(size);
+        log.info("查询热门题目接口调用成功！热门题目数量：{},具体数据集合为：{}",questionList.size(),questionList);
         // 异常处理：记录日志并返回友好的错误信息
-        return Result.error("获取热门题目失败");
+        return Result.success(questionList);
 
     }
 

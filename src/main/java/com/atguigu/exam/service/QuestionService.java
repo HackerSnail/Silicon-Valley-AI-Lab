@@ -28,7 +28,25 @@ import java.util.List;
  * @author 智能学习平台开发团队
  * @version 1.0
  */
+import com.atguigu.exam.vo.QuestionQueryVo;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
 public interface QuestionService extends IService<Question> {
+    void customPageService(Page<Question> page, QuestionQueryVo questionQueryVo);
 
+    public Question customDetailQuestion(Long id);
 
+    public List<Question> customDetailQuestionList(Long categoryId);
+
+    public List<Question> customGetQuestionsByDifficulty(String difficulty);
+
+    void customSaveQuestion(Question question);
+
+    void customUpdateQuestion(Question question);
+
+    void customRemoveQuestionById(Long id);
+
+    List<Question> customFindPopularQuestions(Integer size);
+
+    List<Question> customGetRandomQuestions(Integer count, Long categoryId, String difficulty);
 } 

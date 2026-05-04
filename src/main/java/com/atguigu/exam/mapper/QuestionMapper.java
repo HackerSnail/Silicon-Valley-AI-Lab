@@ -3,8 +3,13 @@ package com.atguigu.exam.mapper;
 
 import com.atguigu.exam.entity.Category;
 import com.atguigu.exam.entity.Question;
+import com.atguigu.exam.vo.QuestionQueryVo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -23,6 +28,14 @@ public interface QuestionMapper extends BaseMapper<Question> {
      */
     @Select("SELECT category_id AS categoryId, COUNT(*) AS questionCount FROM questions WHERE  is_deleted = 0 GROUP BY category_id")
     List<Map<String, Object>> getCategoryQuestionCount();
+
+   /**
+  * 分页查询题目信息，第一步！一会要触发，根据题目id查询选项！！
+  * @param page 分页对象
+  * @param questionQueryVo 自己实体类,封装的查询对象！
+  * @return
+  */
+    IPage<Question> customPage(IPage page, @Param("queryVo") QuestionQueryVo questionQueryVo);
 
     /*
      * 递归查询全量分类树形结构（注解版）
@@ -51,5 +64,12 @@ public interface QuestionMapper extends BaseMapper<Question> {
 //            "ORDER BY ct.level, ct.id"
 //    })
 //    List<Category> selectCategoryTreeWithCount();
+      Question customGetById(Long questionId);
+
+      List<Question> selectListByCategory(Long categoryId);
+
+      List<Question> selectListByDifficulty(String difficulty);
+
+      List<Question> selectRandomQuestions(Integer count, Long categoryId, String difficulty);
 }
 

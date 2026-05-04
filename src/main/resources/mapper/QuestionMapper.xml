@@ -1,6 +1,131 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.atguigu.exam.mapper.QuestionMapper">
+
+    <!-- 分页查询结果映射 -->
+    <resultMap id="questionMap" type="com.atguigu.exam.entity.Question">
+        <id column="id" property="id" />
+        <association property="answer" javaType="com.atguigu.exam.entity.QuestionAnswer">
+            <id column="qas_id" property="id" />
+            <result column="qas_create_time" property="createTime" />
+            <result column="qas_update_time" property="updateTime" />
+            <result column="id" property="questionId" />
+        </association>
+        <collection property="choices" 
+                    ofType="com.atguigu.exam.entity.QuestionChoice"
+                    column="id"
+                    select="com.atguigu.exam.mapper.QuestionChoiceMapper.selectListByQuestionId" />
+    </resultMap>
+
+    <!-- 分页查询 -->
+    <select id="customPage" resultMap="questionMap">
+        SELECT
+            qs.*,
+            qas.id AS qas_id,
+            qas.create_time AS qas_create_time,
+            qas.update_time AS qas_update_time,
+            qas.is_deleted AS qas_is_deleted
+        FROM questions AS qs
+        LEFT JOIN question_answers AS qas ON qs.id = qas.question_id
+        WHERE qs.is_deleted = 0
+          AND qas.is_deleted = 0
+        <if test="queryVo.type != null and queryVo.type != ''">
+            AND qs.type = #{queryVo.type}
+        </if>
+        <if test="queryVo.difficulty != null and queryVo.difficulty != ''">
+            AND qs.difficulty = #{queryVo.difficulty}
+        </if>
+        <if test="queryVo.categoryId != null">
+            AND qs.category_id = #{queryVo.categoryId}
+        </if>
+        <if test="queryVo.keyword != null and queryVo.keyword != ''">
+            AND title LIKE CONCAT('%', #{queryVo.keyword}, '%')
+        </if>
+        ORDER BY qs.id DESC
+    </select>
+
+    <!-- 详情查询结果映射 -->
+    <resultMap id="detailQuestionMap" type="com.atguigu.exam.entity.Question">
+        <id column="id" property="id" />
+        <association property="answer" javaType="com.atguigu.exam.entity.QuestionAnswer">
+            <id column="qas_id" property="id" />
+            <result column="qas_create_time" property="createTime" />
+            <result column="qas_update_time" property="updateTime" />
+            <result column="question_id" property="questionId" />
+        </association>
+        <collection property="choices"
+            ofType="com.atguigu.exam.entity.QuestionChoice"
+            notNullColumn="qcs_id">
+            <id column="qcs_id" property="id" />
+            <result column="qcs_question_id" property="questionId" />
+            <result column="qcs_create_time" property="createTime" />
+            <result column="qcs_update_time" property="updateTime" />
+        </collection>
+    </resultMap>
+
+  <!-- 详情查询 -->
+    <select id="customGetById" resultMap="detailQuestionMap"> 
+        SELECT qs.*, qas.id AS qas_id,
+            qas.question_id, qas.answer, qas.keywords, qas.create_time AS qas_create_time,
+            qas.update_time AS qas_update_time, qcs.id AS qcs_id, qcs.question_id AS qcs_question_id,
+            qcs.content, qcs.is_correct, qcs.sort, qcs.create_time AS qcs_create_time, qcs.update_time
+            AS qcs_update_time 
+        FROM questions AS qs LEFT JOIN question_answers AS qas ON qs.id =
+            qas.question_id LEFT JOIN question_choices AS qcs ON qs.id = qcs.question_id AND
+            qcs.is_deleted = 0 
+        WHERE qs.is_deleted = 0 AND qas.is_deleted = 0 AND qs.id = #{questionId}
+            ORDER BY qcs.sort ASC 
+        </select>
+
+    <!-- 根据分类查询题目列表 -->
+    <select id="selectListByCategory" resultMap="detailQuestionMap"> 
+        SELECT qs.*, qas.id AS qas_id,
+                qas.question_id, qas.answer, qas.keywords, qas.create_time AS qas_create_time,
+                qas.update_time AS qas_update_time, qcs.id AS qcs_id, qcs.question_id AS qcs_question_id,
+                qcs.content, qcs.is_correct, qcs.sort, qcs.create_time AS qcs_create_time, qcs.update_time
+                AS qcs_update_time
+        FROM questions qs LEFT JOIN question_answers qas ON qs.id =
+                qas.question_id LEFT JOIN question_choices qcs ON qs.id = qcs.question_id AND qcs.is_deleted
+                = 0 
+        WHERE qs.is_deleted = 0 AND qas.is_deleted = 0 AND qs.category_id = #{categoryId} ORDER
+                BY qs.create_time DESC, qcs.sort ASC 
+    </select>
+    <!-- 根据难度查询题目列表 -->
+    <select id="selectListByDifficulty" resultMap="detailQuestionMap">
+        SELECT qs.*, qas.id AS qas_id,
+            qas.question_id, qas.answer, qas.keywords, 
+            qas.create_time AS qas_create_time, qas.update_time AS qas_update_time,
+            qcs.id AS qcs_id, qcs.question_id AS qcs_question_id,
+            qcs.content, qcs.is_correct, qcs.sort,
+            qcs.create_time AS qcs_create_time, qcs.update_time AS qcs_update_time
+        FROM questions qs
+        LEFT JOIN question_answers qas ON qs.id = qas.question_id
+        LEFT JOIN question_choices qcs ON qs.id = qcs.question_id AND qcs.is_deleted = 0
+        WHERE qs.is_deleted = 0
+        AND qas.is_deleted = 0
+        AND qs.difficulty = #{difficulty}
+        ORDER BY qs.create_time DESC, qcs.sort ASC
+    </select>
+    <!-- 随机抽题查询 -->
+    <select id="selectRandomQuestions" resultMap="detailQuestionMap">
+        SELECT qs.*, qas.id AS qas_id,
+            qas.question_id, qas.answer, qas.keywords, 
+            qas.create_time AS qas_create_time, qas.update_time AS qas_update_time,
+            qcs.id AS qcs_id, qcs.question_id AS qcs_question_id,
+            qcs.content, qcs.is_correct, qcs.sort,
+            qcs.create_time AS qcs_create_time, qcs.update_time AS qcs_update_time
+        FROM questions qs
+        LEFT JOIN question_answers qas ON qs.id = qas.question_id
+        LEFT JOIN question_choices qcs ON qs.id = qcs.question_id AND qcs.is_deleted = 0
+        WHERE qs.is_deleted = 0
+        AND qas.is_deleted = 0
+        <if test="categoryId != null">
+            AND qs.category_id = #{categoryId}
+        </if>
+        <if test="difficulty != null and difficulty != ''">
+            AND qs.difficulty = #{difficulty}
+        </if>
+        ORDER BY RAND()
+        LIMIT #{count}
+    </select>
 </mapper>
