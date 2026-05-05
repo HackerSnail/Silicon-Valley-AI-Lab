@@ -3,8 +3,12 @@ package com.atguigu.exam.service;
 import com.atguigu.exam.entity.Question;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.io.IOException;
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
+
+import com.atguigu.exam.vo.QuestionImportVo;
 /**
  * 题目业务服务接口 - 定义题目相关的业务逻辑
  * 
@@ -49,4 +53,28 @@ public interface QuestionService extends IService<Question> {
     List<Question> customFindPopularQuestions(Integer size);
 
     List<Question> customGetRandomQuestions(Integer count, Long categoryId, String difficulty);
+
+        /**
+     * 解析并预览Excel文件中的题目内容，不会导入到数据库
+     *   文件和格式校验
+     *   文件解析处理
+     * @param file
+     * @return
+     */
+    List<QuestionImportVo> preViewExcel(MultipartFile file) throws IOException;
+
+     /**
+     * 【方法重载】
+     * 批量题目导入 [execl和ai生成批量导入]
+     *   批量数据库添加
+     * @param questionImportVoList
+     * @return Excel导入完成！成功导入 %d [工程导入] / %d [题目总数] 道题目
+     */
+    int importBatchQuestions(List<QuestionImportVo> questionImportVoList) throws IOException;
+    /**
+     * 进行题目批量导入
+     * @param file
+     * @return
+     */
+    String importExeclBatchQuestions(MultipartFile file) throws IOException;
 } 

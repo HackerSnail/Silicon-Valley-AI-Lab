@@ -35,13 +35,8 @@ public class ExcelUtil {
         Workbook workbook = null;
         
         try {
-            // 根据文件扩展名选择对应的工作簿类型
-            String fileName = file.getOriginalFilename();
-            if (fileName != null && fileName.endsWith(".xlsx")) {
-                workbook = new XSSFWorkbook(inputStream); // Excel 2007+
-            } else {
-                workbook = new HSSFWorkbook(inputStream); // Excel 97-2003
-            }
+            // 使用 WorkbookFactory 自动检测文件格式
+            workbook = WorkbookFactory.create(inputStream);
             
             // 获取第一个工作表
             Sheet sheet = workbook.getSheetAt(0);
